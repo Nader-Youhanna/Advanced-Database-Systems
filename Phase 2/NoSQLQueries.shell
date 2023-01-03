@@ -1,0 +1,91 @@
+// SELECT
+// Employee.Fname,
+//     Employee.Salary,
+//     Employee.Super_Ssn,
+//     Pname,
+//     Hours
+// FROM
+// Employee
+//     INNER JOIN Works_On ON Employee.Ssn = Works_On.Essn
+//     INNER JOIN Project ON Works_On.Pno = Project.Pnumber
+// WHERE
+// Salary > 10000
+//     AND Pnumber > 500
+//     AND Hours > 500
+// GO
+
+// Rewrite the query using NoSQL mongodb shell
+db.Works_On.aggregate([
+    {
+        $lookup: {
+            from: "Employee",
+            localField: "Essn",
+            foreignField: "Ssn",
+            as: "out1"
+        }
+    },
+    {
+        $unwind: "$out1"
+    },
+    {
+        $lookup: {
+            from: "Project",
+            localField: "Pnumber",
+            foreignField: "Pno",
+            as: "out2"
+        }
+    },
+    {
+        $unwind: "$out2"
+    }
+])
+
+// ----------------------------------
+
+db.Employee.aggregate([
+    {
+        $lookup: {
+            from: "Works_On",
+            localField: "Ssn",
+            foreignField: "Essn",
+            as: "out1"
+        }
+    },
+    {
+        $unwind: "$out1"
+    },
+    {
+        $lookup: {
+            from: "Project",
+            localField: "out1.Pno",
+            foreignField: "Pnumber",
+            as: "out2"
+        }
+    },
+    {
+        $unwind: "$out2"
+    },
+    {
+        $match: {
+            Salary: {
+                $gt: 10000
+            },
+            "out2.Pnumber": {
+                $gt: 500
+            },
+            "out1.Hours": {
+                $gt: 500
+            }
+        }
+    },
+    {
+        $project: {
+            Fname: 1,
+            Salary: 1,
+            Super_Ssn: 1,
+            "out2.Pname": 1,
+            "out1.Hours": 1
+        }
+    }
+])
+

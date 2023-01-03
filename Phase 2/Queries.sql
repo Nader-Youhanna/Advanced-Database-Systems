@@ -101,83 +101,41 @@ ALTER TABLE
 ADD
     CONSTRAINT FK_Department_Location_Dnumber FOREIGN KEY (Dnumber) REFERENCES Department(Dnumber) ON DELETE CASCADE
 GO
-
----------------------------------- CLEAR THE CACHE ----------------------------------
-
-DBCC DROPCLEANBUFFERS
-  
-    ------------------------------ FIRST QUERY ------------------------------------------------------
-
---  NON OPTIMIZED QUERY
+    ---------------------------------- CLEAR THE CACHE ----------------------------------
+    DBCC DROPCLEANBUFFERS ------------------------------ FIRST QUERY ------------------------------------------------------
+    --  NON OPTIMIZED QUERY
 SELECT
     Employee.Fname,
     Employee.Lname,
     Employee.Salary,
     Pname
 FROM
-
-    Employee
-INNER LOOP JOIN
-    Works_On ON Employee.Ssn = Works_On.Essn
-INNER LOOP JOIN
-    Project ON Works_On.Pno = Project.Pnumber
+    Employee INNER LOOP
+    JOIN Works_On ON Employee.Ssn = Works_On.Essn INNER LOOP
+    JOIN Project ON Works_On.Pno = Project.Pnumber
 WHERE
     Project.Pname = 'Emily13'
 ORDER BY
     Employee.Salary DESC
 GO
-
---  OPTIMIZED QUERY
+    --  OPTIMIZED QUERY
 SELECT
     Employee.Fname,
     Employee.Lname,
     Employee.Salary,
     Pname
 FROM
-    Employee INNER 
-    JOIN Works_On ON Employee.Ssn = Works_On.Essn INNER 
-    JOIN Project ON Works_On.Pno = Project.Pnumber
+    Employee
+    INNER JOIN Works_On ON Employee.Ssn = Works_On.Essn
+    INNER JOIN Project ON Works_On.Pno = Project.Pnumber
 WHERE
     Project.Pname = 'Emily13'
 ORDER BY
     Employee.Salary DESC
 GO
     ------------------------------ SECOND QUERY ------------------------------------------------------
---  We want to select the managers for employees that has salaries more than 10000 and work on project with Pnumber greater than 500
-
--- NON OPTIMIZED
-
-SELECT
-    Employee.Fname,
-	Employee.Salary,
-    Employee.Super_Ssn,
-	Pname,
-	Hours
-FROM Employee INNER LOOP
-    JOIN Works_On ON Employee.Ssn = Works_On.Essn INNER LOOP
-    JOIN Project ON Works_On.Pno = Project.Pnumber
-WHERE
-Hours > 500 AND
-    Salary in (
-    SELECT
-        Salary
-    FROM
-        Employee
-    WHERE
-        Salary > 10000
-)
-AND Pnumber in (
-    SELECT
-        Pnumber
-    FROM
-        Project
-    WHERE
-        Pnumber > 500
-) 
-GO
-
--- OPTIMIZED
-
+    --  We want to select the managers for employees that has salaries more than 10000 and work on project with Pnumber greater than 500
+    -- NON OPTIMIZED
 SELECT
     Employee.Fname,
     Employee.Salary,
@@ -185,21 +143,47 @@ SELECT
     Pname,
     Hours
 FROM
-    Employee INNER
-    JOIN Works_On ON Employee.Ssn = Works_On.Essn INNER
+    Employee INNER LOOP
+    JOIN Works_On ON Employee.Ssn = Works_On.Essn INNER LOOP
     JOIN Project ON Works_On.Pno = Project.Pnumber
 WHERE
-
-    Salary > 10000 AND 
-    Pnumber > 500 AND
     Hours > 500
+    AND Salary in (
+        SELECT
+            Salary
+        FROM
+            Employee
+        WHERE
+            Salary > 10000
+    )
+    AND Pnumber in (
+        SELECT
+            Pnumber
+        FROM
+            Project
+        WHERE
+            Pnumber > 500
+    )
 GO
-
-----------------------------------------   THIRD QUERY -------------------------------------------------
-
---  We want to select the employee Name, Salary, Super_Ssn, Pname, Hours for employees that has salaries more than 10000 and work on project with Hours greater than 500
-
--- NON OPTIMIZED
+    -- OPTIMIZED
+SELECT
+    Employee.Fname,
+    Employee.Salary,
+    Employee.Super_Ssn,
+    Pname,
+    Hours
+FROM
+    Employee
+    INNER JOIN Works_On ON Employee.Ssn = Works_On.Essn
+    INNER JOIN Project ON Works_On.Pno = Project.Pnumber
+WHERE
+    Salary > 10000
+    AND Pnumber > 500
+    AND Hours > 500
+GO
+    ----------------------------------------   THIRD QUERY -------------------------------------------------
+    --  We want to select the employee Name, Salary, Super_Ssn, Pname, Hours for employees that has salaries more than 10000 and work on project with Hours greater than 500
+    -- NON OPTIMIZED
 SELECT
     DISTINCT E.Fname,
     E.Salary,
@@ -226,8 +210,7 @@ WHERE
             AND E.Salary > 10000
     )
 GO
-
--- OPTIMIZED
+    -- OPTIMIZED
 SELECT
     DISTINCT E.Fname,
     E.Salary,
@@ -242,42 +225,24 @@ FROM
 WHERE
     Hours > 500
     AND E.Salary > 10000
-
+GO
     ----------------------------------------   FOURTH QUERY -------------------------------------------------
-
-
-	-- NON OPTIMIZED
-SELECT * FROM Employee E
-
-WHERE E.Super_Ssn IN (
-
-SELECT M.SSN FROM Employee E, Employee M
-
-WHERE E.Super_Ssn = M.Ssn AND M.Bdate > '1970-01-01'
-
-);
+    -- NON OPTIMIZED
+SELECT
+    *
+FROM
+    Employee E
+WHERE
+    E.Super_Ssn IN (
+        SELECT
+            M.SSN
+        FROM
+            Employee E,
+            Employee M
+        WHERE
+            E.Super_Ssn = M.Ssn
+            AND M.Bdate > '1970-01-01'
+    );
 
 -- OPTIMIZED
-
-CREATE PROCEDURE sp_Employee_Super_Ssn
-    @Bdate DATETIME
-AS
-BEGIN
-    Select
-        *
-    from
-        Employee E
-    Where
-        E.Super_Ssn in (
-            Select
-                M.Ssn
-            From
-                Employee E,
-                Employee M where E.Super_Ssn = M.Ssn
-                And M.Bdate > @Bdate
-        )
-END
-
-
 EXEC sp_Employee_Super_Ssn '1970-01-01'
-

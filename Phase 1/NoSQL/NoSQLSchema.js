@@ -113,10 +113,10 @@ DependentSchema.virtual('employee', {
 
 const Employee = mongoose.model('Employee', EmployeeSchema);
 
-const Department = mongoose.model('Department', DepartmentSchema);
+// const Department = mongoose.model('Department', DepartmentSchema);
 
-const Project = mongoose.model('Project', ProjectSchema);
+// const Project = mongoose.model('Project', ProjectSchema);
 
-const Works_On = mongoose.model('Works_On', Works_OnSchema);
+// const Works_On = mongoose.model('Works_On', Works_OnSchema);
 
-const Dependent = mongoose.model('Dependent', DependentSchema);
+// const Dependent = mongoose.model('Dependent', DependentSchema);
