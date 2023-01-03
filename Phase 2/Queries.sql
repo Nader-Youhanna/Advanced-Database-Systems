@@ -246,5 +246,38 @@ WHERE
     ----------------------------------------   FOURTH QUERY -------------------------------------------------
 
 
+	-- NON OPTIMIZED
+SELECT * FROM Employee E
 
+WHERE E.Super_Ssn IN (
+
+SELECT M.SSN FROM Employee E, Employee M
+
+WHERE E.Super_Ssn = M.Ssn AND M.Bdate > '1970-01-01'
+
+);
+
+-- OPTIMIZED
+
+CREATE PROCEDURE sp_Employee_Super_Ssn
+    @Bdate DATETIME
+AS
+BEGIN
+    Select
+        *
+    from
+        Employee E
+    Where
+        E.Super_Ssn in (
+            Select
+                M.Ssn
+            From
+                Employee E,
+                Employee M where E.Super_Ssn = M.Ssn
+                And M.Bdate > @Bdate
+        )
+END
+
+
+EXEC sp_Employee_Super_Ssn '1970-01-01'
 
