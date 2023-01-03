@@ -102,7 +102,9 @@ ADD
     CONSTRAINT FK_Department_Location_Dnumber FOREIGN KEY (Dnumber) REFERENCES Department(Dnumber) ON DELETE CASCADE
 GO
     ---------------------------------- CLEAR THE CACHE ----------------------------------
-    DBCC DROPCLEANBUFFERS ------------------------------ FIRST QUERY ------------------------------------------------------
+    DBCC DROPCLEANBUFFERS
+GO
+    ------------------------------ FIRST QUERY ------------------------------------------------------
     --  NON OPTIMIZED QUERY
 SELECT
     Employee.Fname,
@@ -132,6 +134,18 @@ WHERE
     Project.Pname = 'Emily13'
 ORDER BY
     Employee.Salary DESC
+GO
+    --  Add non clustered index on Employee.SSN
+    CREATE NONCLUSTERED INDEX IX_Employee_Ssn ON Employee(Ssn)
+GO
+    -- add non clustered index on Project.Pnumber
+    CREATE NONCLUSTERED INDEX IX_Project_Pnumber ON Project(Pnumber)
+GO
+    -- remove the non clustered index on Employee.Ssn
+    DROP INDEX IX_Employee_Ssn ON Employee
+GO
+    -- remove the non clustered index on Project.Pnumber
+    DROP INDEX IX_Project_Pnumber ON Project
 GO
     ------------------------------ SECOND QUERY ------------------------------------------------------
     --  We want to select the managers for employees that has salaries more than 10000 and work on project with Pnumber greater than 500
@@ -181,6 +195,18 @@ WHERE
     AND Pnumber > 500
     AND Hours > 500
 GO
+    --  Add non clustered index on Employee.SSN
+    CREATE NONCLUSTERED INDEX IX_Employee_Ssn ON Employee(Ssn)
+GO
+    -- add non clustered index on Project.Pnumber
+    CREATE NONCLUSTERED INDEX IX_Project_Pnumber ON Project(Pnumber)
+GO
+    -- remove the non clustered index on Employee.Ssn
+    DROP INDEX IX_Employee_Ssn ON Employee
+GO
+    -- remove the non clustered index on Project.Pnumber
+    DROP INDEX IX_Project_Pnumber ON Project
+GO
     ----------------------------------------   THIRD QUERY -------------------------------------------------
     --  We want to select the employee Name, Salary, Super_Ssn, Pname, Hours for employees that has salaries more than 10000 and work on project with Hours greater than 500
     -- NON OPTIMIZED
@@ -226,6 +252,18 @@ WHERE
     Hours > 500
     AND E.Salary > 10000
 GO
+    --  Add non clustered index on Employee.SSN
+    CREATE NONCLUSTERED INDEX IX_Employee_Ssn ON Employee(Ssn)
+GO
+    -- Add non clustered index on Project.Pnumber
+    CREATE NONCLUSTERED INDEX IX_Project_Pnumber ON Project(Pnumber)
+GO
+    -- Remove the non clustered index on Employee.Ssn
+    DROP INDEX IX_Employee_Ssn ON Employee
+GO
+    -- Remove the non clustered index on Project.Pnumber
+    DROP INDEX IX_Project_Pnumber ON Project
+GO
     ----------------------------------------   FOURTH QUERY -------------------------------------------------
     -- NON OPTIMIZED
 SELECT
@@ -245,4 +283,16 @@ WHERE
     );
 
 -- OPTIMIZED
-EXEC sp_Employee_Super_Ssn '1970-01-01'
+EXEC sp_Employee_Super_Ssn '1970-01-01' --  Add non clustered index on Employee.SSN
+-------------------------
+CREATE NONCLUSTERED INDEX IX_Employee_Ssn ON Employee(Ssn)
+GO
+    -- Add non clustered index on Project.Pnumber
+    CREATE NONCLUSTERED INDEX IX_Project_Pnumber ON Project(Pnumber)
+GO
+    -- Remove the non clustered index on Employee.Ssn
+    DROP INDEX IX_Employee_Ssn ON Employee
+GO
+    -- Remove the non clustered index on Project.Pnumber
+    DROP INDEX IX_Project_Pnumber ON Project
+GO
