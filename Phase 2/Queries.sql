@@ -2,7 +2,7 @@ USE [master]
 GO
     CREATE DATABASE [ADB Project DB]
 GO
-    USE [ADB Project DB]
+    USE [ADB Project DB 10k]
 GO
     ------------------------------CREATE EMPLOYEE TABLE------------------------------------------------------
     CREATE TABLE Employee(
@@ -150,50 +150,33 @@ GO
     ------------------------------ SECOND QUERY ------------------------------------------------------
     --  We want to select the managers for employees that has salaries more than 10000 and work on project with Pnumber greater than 500
     -- NON OPTIMIZED
-SELECT
-    Employee.Fname,
-    Employee.Salary,
-    Employee.Super_Ssn,
-    Pname,
-    Hours
-FROM
-    Employee INNER LOOP
-    JOIN Works_On ON Employee.Ssn = Works_On.Essn INNER LOOP
-    JOIN Project ON Works_On.Pno = Project.Pnumber
-WHERE
-    Hours > 500
-    AND Salary in (
-        SELECT
-            Salary
-        FROM
-            Employee
-        WHERE
-            Salary > 10000
-    )
-    AND Pnumber in (
-        SELECT
-            Pnumber
-        FROM
-            Project
-        WHERE
-            Pnumber > 500
+
+	DBCC DROPCLEANBUFFERS
+	GO
+
+SELECT E.Fname, E.Salary, E.Super_Ssn, P.Pname, W.Hours
+FROM Employee E INNER LOOP JOIN Works_On W ON E.Ssn = W.Essn 
+				INNER LOOP JOIN Project P ON W.Pno = P.Pnumber
+WHERE	W.Hours > 500  
+		AND E.Salary in (
+			SELECT E.Salary FROM Employee E
+			WHERE E.Salary > 10000
+		)
+		AND P.Pnumber in (
+			SELECT P.Pnumber FROM Project P
+			WHERE	P.Pnumber > 500
     )
 GO
     -- OPTIMIZED
-SELECT
-    Employee.Fname,
-    Employee.Salary,
-    Employee.Super_Ssn,
-    Pname,
-    Hours
+SELECT  E.Fname, E.Salary, E.Super_Ssn,  P.Pname,  W.Hours
 FROM
-    Employee
-    INNER JOIN Works_On ON Employee.Ssn = Works_On.Essn
-    INNER JOIN Project ON Works_On.Pno = Project.Pnumber
+    Employee E
+    INNER JOIN Works_On W ON E.Ssn = W.Essn
+    INNER JOIN Project P ON W.Pno = P.Pnumber
 WHERE
-    Salary > 10000
-    AND Pnumber > 500
-    AND Hours > 500
+    E.Salary > 10000
+    AND P.Pnumber > 500
+    AND W.Hours > 500
 GO
     --  Add non clustered index on Employee.SSN
     CREATE NONCLUSTERED INDEX IX_Employee_Ssn ON Employee(Ssn)
